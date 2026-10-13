@@ -1,0 +1,459 @@
+# ============================================================
+#              E-COMMERCE SALES ANALYSIS
+#              Data Science Micro Project
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ------------------------------------------------------------
+# 1. LOAD DATASET
+# ------------------------------------------------------------
+
+df = pd.read_csv("ecommerce_sales.csv")
+
+# Convert Order_Date to datetime
+df["Order_Date"] = pd.to_datetime(df["Order_Date"])
+
+# ------------------------------------------------------------
+# 2. DATA CLEANING
+# ------------------------------------------------------------
+
+df["Discount_Percent"] = df["Discount_Percent"].fillna(
+    df["Discount_Percent"].median()
+)
+
+df["Payment_Mode"] = df["Payment_Mode"].fillna(
+    df["Payment_Mode"].mode()[0]
+)
+
+df = df.drop_duplicates()
+
+# ------------------------------------------------------------
+# 3. MAIN MENU
+# ------------------------------------------------------------
+
+while True:
+
+    print("\n")
+    print("=" * 60)
+    print("             E-COMMERCE SALES ANALYSIS")
+    print("=" * 60)
+
+    print("\n1.  Display First 5 Records")
+    print("2.  Dataset Information")
+    print("3.  Missing Values")
+    print("4.  Basic Statistics")
+    print("5.  Sales by Category")
+    print("6.  Overall Monthly Sales")
+    print("7.  Top 10 Products")
+    print("8.  Sales by State")
+    print("9.  Payment Method Analysis")
+    print("10. Profit by Category")
+    print("11. Product Monthly Sales Analysis")
+    print("12. Key Findings")
+    print("13. Exit")
+
+    choice = input("\nEnter your choice: ")
+
+    # --------------------------------------------------------
+    # 1. FIRST 5 RECORDS
+    # --------------------------------------------------------
+
+    if choice == "1":
+
+        print("\n========== FIRST 5 RECORDS ==========")
+        print(df.head())
+
+    # --------------------------------------------------------
+    # 2. DATASET INFORMATION
+    # --------------------------------------------------------
+
+    elif choice == "2":
+
+        print("\n========== DATASET INFORMATION ==========")
+
+        print("\nDataset Shape:")
+        print(df.shape)
+
+        print("\nData Types:")
+        print(df.dtypes)
+
+        print("\nDataset Information:")
+        df.info()
+
+    # --------------------------------------------------------
+    # 3. MISSING VALUES
+    # --------------------------------------------------------
+
+    elif choice == "3":
+
+        print("\n========== MISSING VALUES ==========")
+
+        print(df.isnull().sum())
+
+    # --------------------------------------------------------
+    # 4. BASIC STATISTICS
+    # --------------------------------------------------------
+
+    elif choice == "4":
+
+        print("\n========== BASIC STATISTICS ==========")
+
+        print("Total Sales:",
+              round(df["Sales"].sum(), 2))
+
+        print("Total Profit:",
+              round(df["Profit"].sum(), 2))
+
+        print("Total Quantity Sold:",
+              df["Quantity"].sum())
+
+        print("Average Order Value:",
+              round(df["Sales"].mean(), 2))
+
+        print("\nDescriptive Statistics:")
+        print(df[
+            ["Quantity",
+             "Unit_Price",
+             "Discount_Percent",
+             "Sales",
+             "Profit"]
+        ].describe())
+
+    # --------------------------------------------------------
+    # 5. SALES BY CATEGORY
+    # --------------------------------------------------------
+
+    elif choice == "5":
+
+        category_sales = (
+            df.groupby("Category")["Sales"]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        print("\n========== SALES BY CATEGORY ==========")
+        print(category_sales)
+
+        plt.figure(figsize=(9, 5))
+
+        category_sales.plot(kind="bar")
+
+        plt.title("Sales by Category")
+        plt.xlabel("Category")
+        plt.ylabel("Sales")
+        plt.xticks(rotation=45)
+
+        plt.tight_layout()
+        plt.show()
+
+    # --------------------------------------------------------
+    # 6. OVERALL MONTHLY SALES
+    # --------------------------------------------------------
+
+    elif choice == "6":
+
+        df["Month_Number"] = df["Order_Date"].dt.month
+        df["Month"] = df["Order_Date"].dt.month_name()
+
+        monthly_sales = (
+            df.groupby(
+                ["Month_Number", "Month"]
+            )["Sales"]
+            .sum()
+            .sort_index()
+        )
+
+        print("\n========== OVERALL MONTHLY SALES ==========")
+        print(monthly_sales)
+
+        plt.figure(figsize=(12, 5))
+
+        plt.plot(
+            monthly_sales.index.get_level_values("Month"),
+            monthly_sales.values,
+            marker="o"
+        )
+
+        plt.title("Overall Monthly Sales Trend")
+        plt.xlabel("Month")
+        plt.ylabel("Sales")
+
+        plt.xticks(rotation=45)
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
+    # --------------------------------------------------------
+    # 7. TOP 10 PRODUCTS
+    # --------------------------------------------------------
+
+    elif choice == "7":
+
+        top_products = (
+            df.groupby("Product")["Sales"]
+            .sum()
+            .sort_values(ascending=False)
+            .head(10)
+        )
+
+        print("\n========== TOP 10 PRODUCTS ==========")
+        print(top_products)
+
+        plt.figure(figsize=(10, 5))
+
+        top_products.plot(kind="bar")
+
+        plt.title("Top 10 Products by Sales")
+        plt.xlabel("Product")
+        plt.ylabel("Sales")
+
+        # plt.xticks(rotation=45)
+
+        plt.tight_layout()
+        plt.show()
+
+    # --------------------------------------------------------
+    # 8. SALES BY STATE
+    # --------------------------------------------------------
+
+    elif choice == "8":
+
+        state_sales = (
+            df.groupby("State")["Sales"]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        print("\n========== SALES BY STATE ==========")
+        print(state_sales)
+
+        plt.figure(figsize=(10, 5))
+
+        state_sales.plot(kind="bar")
+
+        plt.title("Sales by State")
+        plt.xlabel("State")
+        plt.ylabel("Sales")
+
+        # plt.xticks(rotation=45)
+
+        plt.tight_layout()
+        plt.show()
+
+    # --------------------------------------------------------
+    # 9. PAYMENT METHOD ANALYSIS
+    # --------------------------------------------------------
+
+    elif choice == "9":
+
+        payment_counts = df["Payment_Mode"].value_counts()
+
+        print("\n========== PAYMENT METHODS ==========")
+        print(payment_counts)
+
+        plt.figure(figsize=(8, 6))
+
+        plt.pie(
+            payment_counts.values,
+            labels=payment_counts.index,
+            autopct="%1.1f%%",
+            startangle=90
+        )
+
+        plt.title("Payment Method Distribution")
+
+        plt.show()
+
+    # --------------------------------------------------------
+    # 10. PROFIT BY CATEGORY
+    # --------------------------------------------------------
+
+    elif choice == "10":
+
+        category_profit = (
+            df.groupby("Category")["Profit"]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        print("\n========== PROFIT BY CATEGORY ==========")
+        print(category_profit)
+
+        plt.figure(figsize=(9, 5))
+
+        category_profit.plot(kind="bar")
+
+        plt.title("Profit by Category")
+        plt.xlabel("Category")
+        plt.ylabel("Profit")
+
+        # plt.xticks(rotation=30)
+
+        plt.tight_layout()
+        plt.show()
+
+    # --------------------------------------------------------
+    # 11. PRODUCT MONTHLY SALES ANALYSIS
+    # --------------------------------------------------------
+
+    elif choice == "11":
+
+        print("\n========== PRODUCT MONTHLY SALES ==========")
+
+        print("\nAvailable Products:")
+
+        for product in df["Product"].unique():
+            print("-", product)
+
+        product_name = input(
+            "\nEnter Product Name: "
+        ).strip()
+
+        product_data = df[
+            df["Product"].str.strip().str.lower()
+            == product_name.lower()
+        ]
+
+        if len(product_data) > 0:
+
+            product_data = product_data.copy()
+
+            product_data["Month_Number"] = (
+                product_data["Order_Date"].dt.month
+            )
+
+            product_data["Month"] = (
+                product_data["Order_Date"].dt.month_name()
+            )
+
+            monthly_product_sales = (
+                product_data
+                .groupby(
+                    ["Month_Number", "Month"]
+                )["Sales"]
+                .sum()
+                .sort_index()
+            )
+
+            print(
+                "\nMonthly Sales for:",
+                product_name
+            )
+
+            print(monthly_product_sales)
+
+            # Graph
+            # Scatter Plot
+            plt.figure(figsize=(12, 5))
+
+            plt.scatter(
+                monthly_product_sales.index.get_level_values("Month"),
+                monthly_product_sales.values,
+                s=100
+            )
+
+            plt.title(
+                f"Monthly Sales Analysis - {product_name}"
+            )
+
+            plt.xlabel("Month")
+            plt.ylabel("Sales")
+
+            plt.xticks(rotation=45)
+
+            plt.grid(True)
+
+            plt.tight_layout()
+
+            plt.show()
+
+        else:
+
+            print("\nProduct not found!")
+
+    # --------------------------------------------------------
+    # 12. KEY FINDINGS
+    # --------------------------------------------------------
+
+    elif choice == "12":
+
+        category_sales = (
+            df.groupby("Category")["Sales"]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        top_products = (
+            df.groupby("Product")["Sales"]
+            .sum()
+            .sort_values(ascending=False)
+            .head(10)
+        )
+
+        state_sales = (
+            df.groupby("State")["Sales"]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        payment_counts = (
+            df["Payment_Mode"]
+            .value_counts()
+        )
+
+        print("\n========== KEY FINDINGS ==========")
+
+        print(
+            "Highest Sales Category:",
+            category_sales.idxmax()
+        )
+
+        print(
+            "Top Product:",
+            top_products.idxmax()
+        )
+
+        print(
+            "Top State:",
+            state_sales.idxmax()
+        )
+
+        print(
+            "Most Used Payment Method:",
+            payment_counts.idxmax()
+        )
+
+        print(
+            "Total Sales:",
+            round(df["Sales"].sum(), 2)
+        )
+
+        print(
+            "Total Profit:",
+            round(df["Profit"].sum(), 2)
+        )
+
+    # --------------------------------------------------------
+    # 13. EXIT
+    # --------------------------------------------------------
+
+    elif choice == "13":
+
+        print("\n========== PROJECT COMPLETED ==========")
+        print("Thank you for using E-Commerce Sales Analysis!")
+
+        break
+
+    # --------------------------------------------------------
+    # INVALID CHOICE
+    # --------------------------------------------------------
+
+    else:
+
+        print("\nInvalid choice!")
+        print("Please enter a number between 1 and 15.")
